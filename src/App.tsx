@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react'; // Removed unused React import
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PerspectiveCamera } from '@react-three/drei';
