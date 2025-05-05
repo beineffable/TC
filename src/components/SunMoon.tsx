@@ -13,68 +13,67 @@ interface SunMoonProps {
 const SunMoon: React.FC<SunMoonProps> = ({ timeOfDay, weatherType }) => {
   const sunRef = useRef<THREE.Mesh>(null);
   const moonRef = useRef<THREE.Mesh>(null);
-  
-  // Position based on time of day
-  const position = timeOfDay === 'day' 
-    ? [50, 40, -60] // Sun position during day
-    : [-40, 30, -60]; // Moon position during night
-  
-  // Determine visibility based on weather and time
-  const isVisible = weatherType !== 'clouds' && 
-                   weatherType !== 'rain' && 
-                   weatherType !== 'thunderstorm' && 
-                   weatherType !== 'fog';
-  
-  // Simple animation
-  useFrame(() => {
-    if (sunRef.current && timeOfDay === 'day') {
-      sunRef.current.rotation.y += 0.001;
-    }
-    if (moonRef.current && timeOfDay === 'night') {
-      moonRef.current.rotation.y += 0.0005;
+
+  // Determine visibility and position based on time of day
+  const isDay = timeOfDay === 'day';
+  const isVisible = true; // Always visible, just changes appearance/position
+
+  // Determine color based on weather and time
+  const sunColor = (weatherType === 'fog' || weatherType === 'rain' || weatherType === 'thunderstorm' || weatherType === 'snow') ? '#cccccc' : '#ffffaa';
+  const moonColor = '#e0e0ff';
+
+  // Animation: Rotate sun/moon slowly
+  useFrame(({ clock }) => {
+    const angle = clock.getElapsedTime() * 0.1; // Slow rotation
+    const radius = 50;
+    const x = Math.sin(angle) * radius;
+    const z = -Math.cos(angle) * radius - 30; // Keep it in the distance
+    const y = Math.cos(angle) * 15 + 30; // Rise and set effect
+
+    if (isDay && sunRef.current) {
+      sunRef.current.position.set(x, y, z);
+      sunRef.current.visible = true;
+      if (moonRef.current) moonRef.current.visible = false;
+    } else if (!isDay && moonRef.current) {
+      // Moon follows a similar path but might be slightly different
+      const moonAngle = angle + Math.PI; // Opposite side of the sky
+      const moonX = Math.sin(moonAngle) * radius;
+      const moonZ = -Math.cos(moonAngle) * radius - 30;
+      const moonY = Math.cos(moonAngle) * 15 + 30;
+      moonRef.current.position.set(moonX, moonY, moonZ);
+      moonRef.current.visible = true;
+      if (sunRef.current) sunRef.current.visible = false;
     }
   });
 
-  // Only render if visible based on weather conditions
   if (!isVisible) return null;
-  
+
   return (
-    <>
-      {timeOfDay === 'day' && (
-        <mesh ref={sunRef} position={position}>
-          <sphereGeometry args={[15, 32, 32]} />
-          <meshBasicMaterial color="#FDB813" />
-          <pointLight 
-            position={[0, 0, 0]} 
-            intensity={1.5} 
-            distance={200} 
-            decay={2} 
-            color="#FFF5E0" 
-          />
-        </mesh>
-      )}
+    <group>
+      {/* Sun */}
+      <mesh ref={sunRef} position={[0, 50, -80]}> {/* Initial position, will be updated by useFrame */}
+        <sphereGeometry args={[5, 32, 32]} />
+        <meshStandardMaterial 
+          color={sunColor} 
+          emissive={sunColor} 
+          emissiveIntensity={1.5} 
+          toneMapped={false}
+        />
+      </mesh>
       
-      {timeOfDay === 'night' && (
-        <mesh ref={moonRef} position={position}>
-          <sphereGeometry args={[10, 32, 32]} />
-          <meshStandardMaterial 
-            color="#E6E6E6" 
-            emissive="#AAAACC"
-            emissiveIntensity={0.2}
-            roughness={0.8}
-            metalness={0.1}
-          />
-          <pointLight 
-            position={[0, 0, 0]} 
-            intensity={0.8} 
-            distance={150} 
-            decay={2} 
-            color="#E6EEFF" 
-          />
-        </mesh>
-      )}
-    </>
+      {/* Moon */}
+      <mesh ref={moonRef} position={[0, 50, -80]}> {/* Initial position, will be updated by useFrame */}
+        <sphereGeometry args={[4, 32, 32]} />
+        <meshStandardMaterial 
+          color={moonColor} 
+          emissive={moonColor} 
+          emissiveIntensity={0.3} 
+          toneMapped={false}
+        />
+      </mesh>
+    </group>
   );
 };
 
 export default SunMoon;
+

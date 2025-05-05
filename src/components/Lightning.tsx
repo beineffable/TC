@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react'; // Removed unused useEffect
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -26,8 +26,7 @@ const Lightning: React.FC<LightningProps> = ({ weatherType }) => {
     weatherType === 'thunderstorm' ? Math.random() * 5 + 2 : Math.random() * 15 + 10
   );
   
-  // State to track lightning duration
-  const [lightningDuration, setLightningDuration] = useState(0.2);
+  // Removed unused lightningDuration state
   
   // Lightning flash effect
   useFrame(({ clock }) => {
@@ -41,7 +40,7 @@ const Lightning: React.FC<LightningProps> = ({ weatherType }) => {
         
         // Set duration for this flash (slightly random)
         const duration = Math.random() * 0.2 + 0.1;
-        setLightningDuration(duration);
+        // setLightningDuration(duration); // Removed state setter
         
         // Schedule end of lightning flash
         setTimeout(() => {
@@ -65,7 +64,8 @@ const Lightning: React.FC<LightningProps> = ({ weatherType }) => {
   });
   
   // Generate lightning position (random within reasonable area)
-  const position = useRef([
+  // Explicitly type as [number, number, number]
+  const position = useRef<[number, number, number]>([
     (Math.random() - 0.5) * 60, // x: random position
     30 + Math.random() * 20,    // y: high in the sky
     -30 - Math.random() * 20    // z: in the distance
@@ -81,7 +81,7 @@ const Lightning: React.FC<LightningProps> = ({ weatherType }) => {
     <>
       {/* Lightning flash light */}
       <pointLight
-        position={position.current}
+        position={position.current} // Position is now correctly typed
         intensity={intensity * 2}
         distance={200}
         decay={2}
@@ -94,7 +94,7 @@ const Lightning: React.FC<LightningProps> = ({ weatherType }) => {
       {/* Visual representation of lightning (simple plane with emissive material) */}
       <mesh 
         ref={lightningRef}
-        position={position.current}
+        position={position.current} // Position is now correctly typed
         rotation={[0, Math.random() * Math.PI, 0]}
       >
         <planeGeometry args={[2 + Math.random() * 3, 20 + Math.random() * 10]} />

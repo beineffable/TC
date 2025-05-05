@@ -64,7 +64,7 @@ function App(): JSX.Element {
     const [skyColor, setSkyColor] = useState<THREE.Color>(new THREE.Color(DAY_SKY_COLOR));
     const [fogProps, setFogProps] = useState<FogPropsState>({ color: skyColor, near: 50, far: 150 });
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [fetchError, setFetchError] = useState<string | null>(null);
+    const [_fetchError, setFetchError] = useState<string | null>(null); // Keep state setter, mark variable as unused with _
     const [showFallback, setShowFallback] = useState<boolean>(false);
 
     // --- Weather & Location Fetching --- 
@@ -195,22 +195,9 @@ function App(): JSX.Element {
     };
 
     // --- Render --- 
-    const containerStyle: React.CSSProperties = {
-        position: 'absolute',
-        inset: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#111122', // Default background (only visible briefly)
-        color: 'white',
-        padding: '20px',
-        textAlign: 'center',
-        fontFamily: 'sans-serif',
-    };
+    // Removed unused containerStyle
 
     if (isLoading) {
-        // Optionally show a loading indicator or the fallback immediately
-        // return <div style={containerStyle}>Loading weather...</div>;
         // Render fallback during loading to avoid flash of default background
         return <FallbackWeather />;
     }

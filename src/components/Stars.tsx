@@ -78,7 +78,8 @@ const Stars: React.FC<StarsProps> = ({ timeOfDay }) => {
         const intensity = (Math.sin(clock.getElapsedTime() * twinkleRate + i) + 1) / 2;
         
         // Apply intensity to star material
-        if (star instanceof THREE.Mesh && star.material instanceof THREE.MeshBasicMaterial) {
+        // Use MeshStandardMaterial for emissive properties
+        if (star instanceof THREE.Mesh && star.material instanceof THREE.MeshStandardMaterial) {
           // Adjust emissive intensity for twinkling
           star.material.emissiveIntensity = 0.5 + intensity * 0.5;
         }
@@ -91,11 +92,14 @@ const Stars: React.FC<StarsProps> = ({ timeOfDay }) => {
       {starPositions.map((position, index) => (
         <mesh key={index} position={position as [number, number, number]}>
           <sphereGeometry args={[starSizes[index], 8, 8]} />
-          <meshBasicMaterial 
+          {/* Use MeshStandardMaterial instead of MeshBasicMaterial for emissive properties */}
+          <meshStandardMaterial 
             color={starColors[index]} 
             emissive={starColors[index]}
             emissiveIntensity={0.8}
             toneMapped={false} // Makes stars brighter
+            roughness={1.0} // Less reflective
+            metalness={0.0} // Non-metallic
           />
         </mesh>
       ))}

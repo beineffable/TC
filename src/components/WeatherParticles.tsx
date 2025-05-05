@@ -62,11 +62,11 @@ const WeatherParticles: React.FC<WeatherParticlesProps> = ({ weatherType }) => {
   return (
     <points ref={pointsRef}>
       <bufferGeometry attach="geometry">
+        {/* Correctly attach the buffer attribute using args */}
         <bufferAttribute
           attach="attributes-position"
-          count={particleCount}
-          array={positions}
-          itemSize={3}
+          args={[positions, 3]} // Pass Float32Array and itemSize via args
+          count={positions.length / 3} // Calculate count based on array length
         />
       </bufferGeometry>
       <pointsMaterial
