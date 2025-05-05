@@ -9,6 +9,7 @@ import Clouds from './components/Clouds'; // Import the Clouds component
 import Stars from './components/Stars'; // Import the Stars component
 import WeatherParticles from './components/WeatherParticles'; // Import the WeatherParticles component
 import Lightning from './components/Lightning'; // Import the Lightning component
+import FallbackWeather from './components/FallbackWeather'; // Import the FallbackWeather component
 
 // --- Types --- 
 type WeatherType = 'clear' | 'few_clouds' | 'clouds' | 'rain' | 'thunderstorm' | 'snow' | 'fog';
@@ -64,12 +65,14 @@ function App(): JSX.Element {
     const [fogProps, setFogProps] = useState<FogPropsState>({ color: skyColor, near: 50, far: 150 });
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
+    const [showFallback, setShowFallback] = useState<boolean>(false);
 
     // --- Weather & Location Fetching --- 
     useEffect(() => {
         let isMounted = true;
         setIsLoading(true);
         setFetchError(null);
+        setShowFallback(false);
 
         const fetchWeatherAndLocation = async () => {
             let currentLat: number | null = latitude ?? null;
@@ -83,7 +86,6 @@ function App(): JSX.Element {
                             reject(new Error("Geolocation not supported by browser"));
                             return;
                         }
-                        // Request permission and get position
                         navigator.geolocation.getCurrentPosition(resolve, reject, {
                             enableHighAccuracy: false,
                             timeout: 10000,
@@ -94,7 +96,7 @@ function App(): JSX.Element {
                     currentLon = position.coords.longitude;
                 } catch (error: any) {
                     console.error(`Geolocation error: ${error.message}`);
-                    locationError = `Geolocation error: ${error.message}. Using default weather.`;
+                    locationError = `Geolocation error: ${error.message}. Using fallback.`;
                 }
             }
             
@@ -117,18 +119,19 @@ function App(): JSX.Element {
                         setWeatherData(data);
                         determineWeatherAndTime(data);
                         setFetchError(null);
+                        setShowFallback(false); // Successfully fetched, don't show fallback
                     }
                 } catch (error: any) {
                     console.error(`Weather fetch error: ${error.message}`);
                     if (isMounted) {
-                        setFetchError(`Weather fetch error: ${error.message}. Using default weather.`);
-                        setDefaultWeatherState();
+                        setFetchError(`Weather fetch error: ${error.message}. Using fallback.`);
+                        setShowFallback(true); // Show fallback on fetch error
                     }
                 }
             } else {
                  if (isMounted) {
                     setFetchError(locationError);
-                    setDefaultWeatherState();
+                    setShowFallback(true); // Show fallback if location fails
                  }
             }
             
@@ -137,22 +140,13 @@ function App(): JSX.Element {
             }
         };
 
-        const setDefaultWeatherState = () => {
-            console.log("Setting default weather state (Clear, Day)");
-            setWeatherType('clear');
-            setTimeOfDay('day');
-            const defaultSky = new THREE.Color(DAY_SKY_COLOR);
-            setSkyColor(defaultSky);
-            setFogProps({ color: defaultSky, near: 50, far: 150 });
-        }
-
         if (apiKey) {
             fetchWeatherAndLocation();
         } else {
-            console.error("OpenWeatherMap API Key not provided in URL parameters.");
-            setDefaultWeatherState();
-            setIsLoading(false);
+            console.error("OpenWeatherMap API Key not provided in URL parameters. Using fallback.");
             setFetchError("API Key missing in URL.")
+            setShowFallback(true); // Show fallback if API key is missing
+            setIsLoading(false);
         }
 
         return () => {
@@ -161,7 +155,7 @@ function App(): JSX.Element {
 
     }, [apiKey, latitude, longitude]);
 
-    // --- Weather Logic --- 
+    // --- Weather Logic (Only relevant if not using fallback) --- 
     const determineWeatherAndTime = (data: WeatherData) => {
         const weatherId = data.weather[0].id;
         const currentTime = Date.now() / 1000;
@@ -207,7 +201,7 @@ function App(): JSX.Element {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#111122', // Default background
+        backgroundColor: '#111122', // Default background (only visible briefly)
         color: 'white',
         padding: '20px',
         textAlign: 'center',
@@ -215,52 +209,39 @@ function App(): JSX.Element {
     };
 
     if (isLoading) {
-        return <div style={containerStyle}>Loading weather...</div>;
+        // Optionally show a loading indicator or the fallback immediately
+        // return <div style={containerStyle}>Loading weather...</div>;
+        // Render fallback during loading to avoid flash of default background
+        return <FallbackWeather />;
     }
     
-    if (fetchError) {
-         return <div style={{...containerStyle, color: fetchError === "API Key missing in URL." ? 'white' : 'orange'}}>{fetchError}</div>;
+    // Render FallbackWeather if API key is missing or fetch error occurred
+    if (showFallback) {
+        console.log("Rendering Fallback Weather State due to error or missing API key.");
+        return <FallbackWeather />;
     }
 
+    // Render the main animated weather widget if everything is okay
     return (
         <Canvas style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-            {/* Set the background color */}
             <color attach="background" args={[skyColor.getHex()]} />
-            
-            {/* Setup camera */}
             <PerspectiveCamera makeDefault fov={60} near={0.1} far={1000} position={[0, 5, 1]} />
-            
-            {/* Add fog effect */}
             <fog attach="fog" args={[fogProps.color.getHex(), fogProps.near, fogProps.far]} />
-
-            {/* Add lighting */}
             <ambientLight intensity={timeOfDay === 'day' ? 0.6 : 0.2} />
             <directionalLight 
                 position={timeOfDay === 'day' ? [50, 50, 50] : [-50, 50, 20]}
                 intensity={timeOfDay === 'day' ? 1.0 : 0.3}
                 color={timeOfDay === 'day' ? 0xffffff : 0xc9dee7}
             />
-            
-            {/* Add the gradient background for seamless scrolling */}
             <GradientBackground topColor={skyColor} />
-            
-            {/* Add the Stars component - only visible at night */}
             <Stars timeOfDay={timeOfDay} />
-            
-            {/* Add the SunMoon component */}
             <SunMoon timeOfDay={timeOfDay} weatherType={weatherType} />
-            
-            {/* Add the Clouds component - present in all weather conditions */}
             <Clouds timeOfDay={timeOfDay} weatherType={weatherType} />
-            
-            {/* Add the WeatherParticles component - for rain and snow */}
             <WeatherParticles weatherType={weatherType} />
-            
-            {/* Add the Lightning component - for thunderstorm and rain */}
             <Lightning weatherType={weatherType} />
-            
         </Canvas>
     );
 }
 
 export default App;
+
