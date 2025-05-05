@@ -6,6 +6,9 @@ import './index.css'; // Ensure styles are imported
 import SunMoon from './components/SunMoon'; // Import the SunMoon component
 import GradientBackground from './components/GradientBackground'; // Import the GradientBackground component
 import Clouds from './components/Clouds'; // Import the Clouds component
+import Stars from './components/Stars'; // Import the Stars component
+import WeatherParticles from './components/WeatherParticles'; // Import the WeatherParticles component
+import Lightning from './components/Lightning'; // Import the Lightning component
 
 // --- Types --- 
 type WeatherType = 'clear' | 'few_clouds' | 'clouds' | 'rain' | 'thunderstorm' | 'snow' | 'fog';
@@ -241,13 +244,21 @@ function App(): JSX.Element {
             {/* Add the gradient background for seamless scrolling */}
             <GradientBackground topColor={skyColor} />
             
+            {/* Add the Stars component - only visible at night */}
+            <Stars timeOfDay={timeOfDay} />
+            
             {/* Add the SunMoon component */}
             <SunMoon timeOfDay={timeOfDay} weatherType={weatherType} />
             
             {/* Add the Clouds component - present in all weather conditions */}
             <Clouds timeOfDay={timeOfDay} weatherType={weatherType} />
             
-            {/* Placeholder for future components */}
+            {/* Add the WeatherParticles component - for rain and snow */}
+            <WeatherParticles weatherType={weatherType} />
+            
+            {/* Add the Lightning component - for thunderstorm and rain */}
+            <Lightning weatherType={weatherType} />
+            
         </Canvas>
     );
 }
