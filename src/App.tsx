@@ -3,6 +3,9 @@ import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PerspectiveCamera } from '@react-three/drei';
 import './index.css'; // Ensure styles are imported
+import SunMoon from './components/SunMoon'; // Import the SunMoon component
+import GradientBackground from './components/GradientBackground'; // Import the GradientBackground component
+import Clouds from './components/Clouds'; // Import the Clouds component
 
 // --- Types --- 
 type WeatherType = 'clear' | 'few_clouds' | 'clouds' | 'rain' | 'thunderstorm' | 'snow' | 'fog';
@@ -218,20 +221,35 @@ function App(): JSX.Element {
 
     return (
         <Canvas style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+            {/* Set the background color */}
             <color attach="background" args={[skyColor.getHex()]} />
+            
+            {/* Setup camera */}
             <PerspectiveCamera makeDefault fov={60} near={0.1} far={1000} position={[0, 5, 1]} />
+            
+            {/* Add fog effect */}
             <fog attach="fog" args={[fogProps.color.getHex(), fogProps.near, fogProps.far]} />
 
+            {/* Add lighting */}
             <ambientLight intensity={timeOfDay === 'day' ? 0.6 : 0.2} />
             <directionalLight 
                 position={timeOfDay === 'day' ? [50, 50, 50] : [-50, 50, 20]}
                 intensity={timeOfDay === 'day' ? 1.0 : 0.3}
                 color={timeOfDay === 'day' ? 0xffffff : 0xc9dee7}
             />
+            
+            {/* Add the gradient background for seamless scrolling */}
+            <GradientBackground topColor={skyColor} />
+            
+            {/* Add the SunMoon component */}
+            <SunMoon timeOfDay={timeOfDay} weatherType={weatherType} />
+            
+            {/* Add the Clouds component - present in all weather conditions */}
+            <Clouds timeOfDay={timeOfDay} weatherType={weatherType} />
+            
             {/* Placeholder for future components */}
         </Canvas>
     );
 }
 
 export default App;
-
